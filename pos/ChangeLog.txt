@@ -1,0 +1,5 @@
+1.0.1.0 
+ - Extended Disk statistics; adding:
+   - # of I/Os currently in progress.
+   - # of milliseconds spent doing I/Os
+   - weighted # of milliseconds spent doing I/Os

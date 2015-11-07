@@ -1,0 +1,4 @@
+for doing unit test:
+autoreconf -i
+./configure
+make check
