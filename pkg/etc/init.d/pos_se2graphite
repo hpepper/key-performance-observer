@@ -1,0 +1,95 @@
+#!/bin/sh
+
+#
+### BEGIN INIT INFO
+# Provides: se2graphite.pl
+# Required-Start: $local_fs
+# Should-Start: pos_graphite2graphs
+# Required-Stop: $local_fs
+# Default-Start: 3 4 5
+# Short-Description: import the /var/tmp/pos*.xml files to the pos.graphite db.
+# Description: Read the /var/tmp/pos*.xml files extract the data and write the data into the pos.graphite DB.
+#               Data are imported every 5 minutes.
+### END INIT INFO
+
+# the following is chkconfig init header
+#
+# pos:   import the /var/tmp/pos*.xml files to the pos.graphite db.
+# chkconfig: 345 97 20
+# description:   Read the /var/tmp/pos*.xml files extract the data and write the data into the pos.graphite DB.
+#                 Data are imported every 5 minutes.
+#
+# processname: se2graphite.pl
+# pidfile: /var/run/se2graphite.pid
+#
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+SERVICE=se2graphite
+PROCESS=se2graphite
+PIDFILE=/var/run/$SERVICE.pid
+
+POS_CONFIG=
+POS_ARGS=
+KRB5_KTNAME=/opt/SFBpos/bin/se2graphite.pl
+
+
+
+RETVAL=0
+
+start() {
+    echo -n $"Starting $SERVICE service: "
+    $KRB5_KTNAME -p $PIDFILE $POS_CONFIG $POS_ARGS&
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$SERVICE
+}
+
+stop() {
+    echo -n $"Stopping $SERVICE service: "
+
+    killproc -p $PIDFILE $PROCESS
+    RETVAL=$?
+    echo
+    if [ $RETVAL -eq 0 ]; then
+        rm -f /var/lock/subsys/$SERVICE
+        rm -f $PIDFILE
+    fi
+}
+
+restart() {
+    stop
+    start
+}
+
+reload() {
+    echo -n $"Reloading $SERVICE configuration: "
+
+    killproc -p $PIDFILE $PROCESS -HUP
+    RETVAL=$?
+    echo
+    return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+    start|stop|restart|reload)
+        $1
+        ;;
+    status)
+        status -p $PIDFILE $PROCESS
+        RETVAL=$?
+        ;;
+    force-reload)
+        reload
+        ;;
+    condrestart|try-restart)
+        [ -f /var/lock/subsys/$SERVICE ] && restart || :
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|reload|force-reload|try-restart}"
+        exit 2
+        ;;
+esac
+exit $RETVAL

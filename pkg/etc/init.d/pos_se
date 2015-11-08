@@ -1,0 +1,96 @@
+#!/bin/sh
+
+#
+### BEGIN INIT INFO
+# Provides: pos
+# Required-Start: $local_fs
+# Should-Start: pos_se2rrd
+# Required-Stop: $local_fs
+# Default-Start: 3 4 5
+# Short-Description: Extract kernel statistic and write into /var/tmp/pos*.xml files.
+# Description: Extracts kernel statistics, through /proc and write the data into /var/tmp/pos*.xml.
+#               Data are extracted every 5 seconds and written every 2 minutes.
+### END INIT INFO
+
+# the following is chkconfig init header
+#
+# pos:   Extract kernel statistic and write into /var/tmp/pos*.xml files.
+# chkconfig: 345 97 20
+# description:   Extracts kernel statistics, through /proc and write the data into /var/tmp/pos*.xml.
+#               Data are extracted every 5 seconds and written every 2 minutes.
+#
+# processname: pos
+# pidfile: /var/run/pos.pid
+#
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+SERVICE=pos
+PROCESS=pos
+PIDFILE=/var/run/$SERVICE.pid
+
+POS_CONFIG=
+POS_ARGS=
+KRB5_KTNAME=/opt/kpo/bin/pos
+
+
+
+RETVAL=0
+
+start() {
+    echo -n $"Starting $SERVICE service: "
+    mkdir -p /var/cache/libvirt
+    $KRB5_KTNAME -p $PIDFILE $POS_CONFIG $POS_ARGS&
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$SERVICE
+}
+
+stop() {
+    echo -n $"Stopping $SERVICE service: "
+
+    killproc -p $PIDFILE $PROCESS
+    RETVAL=$?
+    echo
+    if [ $RETVAL -eq 0 ]; then
+        rm -f /var/lock/subsys/$SERVICE
+        rm -f $PIDFILE
+    fi
+}
+
+restart() {
+    stop
+    start
+}
+
+reload() {
+    echo -n $"Reloading $SERVICE configuration: "
+
+    killproc -p $PIDFILE $PROCESS -HUP
+    RETVAL=$?
+    echo
+    return $RETVAL
+}
+
+# See how we were called.
+case "$1" in
+    start|stop|restart|reload)
+        $1
+        ;;
+    status)
+        status -p $PIDFILE $PROCESS
+        RETVAL=$?
+        ;;
+    force-reload)
+        reload
+        ;;
+    condrestart|try-restart)
+        [ -f /var/lock/subsys/$SERVICE ] && restart || :
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|reload|force-reload|try-restart}"
+        exit 2
+        ;;
+esac
+exit $RETVAL
