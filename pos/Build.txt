@@ -1,4 +1,4 @@
 for doing unit test:
-autoreconf -i
+autoconf -i
 ./configure
 make check

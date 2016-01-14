@@ -47,6 +47,7 @@ int LoopDataCollection() {
 
 	// Is it time for a file change.
 	if (nNow > f_nTimeOfNextFileCycle) {
+		// TODO Investigate this, it seems like I could be operating in an invalid f_LogFileHandle.
 		fprintf(f_LogFileHandle, "</pos>\n");
 		fclose(f_LogFileHandle);
 
